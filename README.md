@@ -7,7 +7,7 @@ This fork adds x/y/z position offset support (rotation-aware, so it works correc
 
 # FAQ
 ### How to use this extension?
-You can use a converter to help you generate all of the required mappings and resources you need from [kafal](https://kafal.pogmc.net)
+You can use a converter to help you generate all of the required mappings and resources you need from [kafal](https://kafal.pogmc.net) or [campfire](https://builtbybit.com/resources/campfire-tools-converter-java2bedrock.108820/)
 ### What's different from the original?
 - `x-offset` / `y-offset` / `z-offset` per item mapping options, rotated to match the furniture's facing
 - `seat-offset-x` / `seat-offset-y` / `seat-offset-z` global config option, fixes Bedrock players sitting in the wrong position on armor-stand-based seats
