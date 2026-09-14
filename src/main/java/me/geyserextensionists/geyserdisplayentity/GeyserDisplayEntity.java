@@ -131,7 +131,9 @@ public class GeyserDisplayEntity implements Extension {
     }
 
     // geyser's armor stand mount offset ignores the actual seat position from java,
-    // overrides SEAT_OFFSET on mount to fix it
+    // overrides SEAT_OFFSET on mount to fix it. per-item seat-offset (on the nearest tracked
+    // furniture entity's own mapping) wins if set, otherwise falls back to the global config
+    // default. applied flat, no rotation.
     @Subscribe
     public void onPassengerMount(ServerUpdateEntityPassengersEvent.Mount event) {
         GeyserEntity vehicle = event.vehicle();
@@ -139,16 +141,41 @@ public class GeyserDisplayEntity implements Extension {
         if (!"minecraft:armor_stand".contentEquals(vehicle.definition().identifier().toString())) return;
 
         FileConfiguration generalConfig = configManager.getConfig().getConfigurationSection("general");
-        if (generalConfig == null) return;
-        boolean hasGlobalSeatOffset = generalConfig.contains("seat-offset-x") || generalConfig.contains("seat-offset-y") || generalConfig.contains("seat-offset-z");
-        if (!hasGlobalSeatOffset) return;
 
-        float seatX = generalConfig.contains("seat-offset-x") ? (float) generalConfig.getDouble("seat-offset-x") : 0f;
-        float seatY = generalConfig.contains("seat-offset-y") ? (float) generalConfig.getDouble("seat-offset-y") : 0f;
-        float seatZ = generalConfig.contains("seat-offset-z") ? (float) generalConfig.getDouble("seat-offset-z") : 0f;
+        Vector3f vehiclePos = vehicle.position();
+        ItemDisplayEntity nearest = null;
+        if (vehiclePos != null) {
+            float nearestDist = 1.0f; // ignore anything further than this, likely unrelated
+            for (ItemDisplayEntity candidate : ItemDisplayEntity.ACTIVE_ENTITIES) {
+                Vector3f candidatePos = candidate.getPosition();
+                if (candidatePos == null) continue;
+                float dist = candidatePos.distance(vehiclePos);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearest = candidate;
+                }
+            }
+        }
+
+        FileConfiguration itemConfig = nearest != null ? nearest.getMappingConfig() : null;
+
+        boolean hasPerItemSeatOffset = itemConfig != null && (itemConfig.contains("seat-offset-x") || itemConfig.contains("seat-offset-y") || itemConfig.contains("seat-offset-z"));
+        boolean hasGlobalSeatOffset = generalConfig != null && (generalConfig.contains("seat-offset-x") || generalConfig.contains("seat-offset-y") || generalConfig.contains("seat-offset-z"));
+        if (!hasPerItemSeatOffset && !hasGlobalSeatOffset) return;
+
+        float seatX = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-x");
+        float seatY = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-y");
+        float seatZ = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-z");
 
         GeyserEntity passenger = event.addedPassenger();
         passenger.override(GeyserEntityDataTypes.SEAT_OFFSET, Vector3f.from(seatX, seatY, seatZ));
+    }
+
+    // per-item value wins if set; otherwise falls back to global config default; otherwise 0
+    private static float readSeatOffsetComponent(FileConfiguration perItem, FileConfiguration global, String key) {
+        if (perItem != null && perItem.contains(key)) return (float) perItem.getDouble(key);
+        if (global != null && global.contains(key)) return (float) global.getDouble(key);
+        return 0f;
     }
 
     private void registerDisplayProperties(GeyserDefineEntityPropertiesEvent event, Identifier entityIdentifier) {

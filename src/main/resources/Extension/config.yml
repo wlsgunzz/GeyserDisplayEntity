@@ -9,7 +9,9 @@ general:
   vanilla-scale-multiplier: 1
   # Equip custom items (items with custom mapping) to hand
   hand: false
-  # Seat offset correction for armor stand seats (applies globally)
+  # Seat offset correction for armor stand seats. Global default here, can be overridden per-item
+  # with seat-offset-x/y/z under a mapping's own displayentityoptions. Applied flat - does not
+  # account for the seat's rotation.
   #seat-offset-x: 0.0
   #seat-offset-y: 0.0
   #seat-offset-z: 0.0
