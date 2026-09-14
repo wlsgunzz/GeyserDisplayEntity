@@ -9,6 +9,10 @@ general:
   vanilla-scale-multiplier: 1
   # Equip custom items (items with custom mapping) to hand
   hand: false
+  # Seat offset correction for armor stand seats (applies globally)
+  #seat-offset-x: 0.0
+  #seat-offset-y: 0.0
+  #seat-offset-z: 0.0
 
 # Invisible item types
 hide-types:

@@ -9,7 +9,10 @@ import me.geyserextensionists.geyserdisplayentity.util.FileConfiguration;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.geyser.api.command.Command;
 import org.geysermc.geyser.api.command.CommandSource;
+import org.geysermc.geyser.api.entity.data.GeyserEntityDataTypes;
 import org.geysermc.geyser.api.entity.property.GeyserEntityProperty;
+import org.geysermc.geyser.api.entity.type.GeyserEntity;
+import org.geysermc.geyser.api.event.java.ServerUpdateEntityPassengersEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCommandsEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineEntitiesEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineEntityPropertiesEvent;
@@ -20,6 +23,7 @@ import org.geysermc.geyser.entity.*;
 import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
+import org.cloudburstmc.math.vector.Vector3f;
 
 import java.util.Collection;
 
@@ -124,6 +128,27 @@ public class GeyserDisplayEntity implements Extension {
                     source.sendMessage(configManager.getLang().getString("commands.geyserdisplayentity.reload.successfully-reloaded"));
                 })
                 .build());
+    }
+
+    // geyser's armor stand mount offset ignores the actual seat position from java,
+    // overrides SEAT_OFFSET on mount to fix it
+    @Subscribe
+    public void onPassengerMount(ServerUpdateEntityPassengersEvent.Mount event) {
+        GeyserEntity vehicle = event.vehicle();
+        if (vehicle.definition() == null) return;
+        if (!"minecraft:armor_stand".contentEquals(vehicle.definition().identifier().toString())) return;
+
+        FileConfiguration generalConfig = configManager.getConfig().getConfigurationSection("general");
+        if (generalConfig == null) return;
+        boolean hasGlobalSeatOffset = generalConfig.contains("seat-offset-x") || generalConfig.contains("seat-offset-y") || generalConfig.contains("seat-offset-z");
+        if (!hasGlobalSeatOffset) return;
+
+        float seatX = generalConfig.contains("seat-offset-x") ? (float) generalConfig.getDouble("seat-offset-x") : 0f;
+        float seatY = generalConfig.contains("seat-offset-y") ? (float) generalConfig.getDouble("seat-offset-y") : 0f;
+        float seatZ = generalConfig.contains("seat-offset-z") ? (float) generalConfig.getDouble("seat-offset-z") : 0f;
+
+        GeyserEntity passenger = event.addedPassenger();
+        passenger.override(GeyserEntityDataTypes.SEAT_OFFSET, Vector3f.from(seatX, seatY, seatZ));
     }
 
     private void registerDisplayProperties(GeyserDefineEntityPropertiesEvent event, Identifier entityIdentifier) {

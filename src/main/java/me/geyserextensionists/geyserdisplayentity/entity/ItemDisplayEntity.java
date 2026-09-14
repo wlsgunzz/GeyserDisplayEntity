@@ -49,7 +49,14 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
     @Override
     public Vector3f bedrockPosition() {
         if (config == null) return super.bedrockPosition();
-        return super.bedrockPosition().up((float) config.getDouble("y-offset"));
+        double xOff = config.getDouble("x-offset");
+        double yOff = config.getDouble("y-offset");
+        double zOff = config.getDouble("z-offset");
+        // rotate offset by yaw so it works regardless of facing
+        double yawRad = Math.toRadians(this.yaw);
+        double rotatedX = xOff * Math.cos(yawRad) - zOff * Math.sin(yawRad);
+        double rotatedZ = xOff * Math.sin(yawRad) + zOff * Math.cos(yawRad);
+        return super.bedrockPosition().add(Vector3f.from(rotatedX, yOff, rotatedZ));
     }
 
     public void setDisplayedItem(EntityMetadata<ItemStack, ?> entityMetadata) {
