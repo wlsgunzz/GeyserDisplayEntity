@@ -16,6 +16,7 @@ You can contact us on our Discord: https://discord.gg/NNNaUdAbpP
 
 # License
 GeyserDisplayEntity is licensed under the [AGPL - 3.0 license](https://github.com/MxSGames/mc-Widgets-plugin/blob/main/LICENSE)
+
 before 
 <img width="1385" height="878" alt="bed1" src="https://github.com/user-attachments/assets/b161a413-32a1-48a1-9a68-16d6b07d68f0" />
 after 
