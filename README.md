@@ -17,6 +17,6 @@ You can contact us on our Discord: https://discord.gg/NNNaUdAbpP
 # Credits
 - Most of the code comes from [Kastle's branch](https://github.com/Kas-tle/Geyser/tree/feature/display-entities)
 - Original extension by [GeyserExtensionists](https://github.com/GeyserExtensionists/GeyserDisplayEntity)
-- Honestly this was made with help from Claude
+- Honestly this was made with help from [Claude](https://claude.ai/)
 # License
 GeyserDisplayEntity is licensed under the [AGPL - 3.0 license](https://github.com/MxSGames/mc-Widgets-plugin/blob/main/LICENSE)
