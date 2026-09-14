@@ -1,0 +1,11 @@
+mappings:
+  campfire_4ed5761:campfire_0e5ad7b8/campfire_8e91559d3c510d:
+    type: minecraft:paper
+    item-identifier: campfire_4ed5761:campfire_0e5ad7b8/campfire_8e91559d3c510d
+    displayentityoptions:
+      y-offset: -0.5
+      z-offset: 0
+      x-offset: -0.5
+      vanilla-scale: false
+      vanilla-scale-multiplier: 1.0
+      hand: false

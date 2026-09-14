@@ -1,0 +1,10 @@
+mappings:
+  campfire_20da02e:campfire_8935f001/campfire_cd6be3eb384f75:
+    type: minecraft:leather_horse_armor
+    item-identifier: campfire_20da02e:campfire_8935f001/campfire_cd6be3eb384f75
+    displayentityoptions:
+      y-offset: -0.5
+      vanilla-scale: true
+      vanilla-scale-multiplier: 1.0
+      hand: false
+      z-offset: -1.0
