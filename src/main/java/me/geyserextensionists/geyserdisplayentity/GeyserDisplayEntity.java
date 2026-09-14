@@ -130,10 +130,8 @@ public class GeyserDisplayEntity implements Extension {
                 .build());
     }
 
-    // geyser's armor stand mount offset ignores the actual seat position from java,
-    // overrides SEAT_OFFSET on mount to fix it. per-item seat-offset (on the nearest tracked
-    // furniture entity's own mapping) wins if set, otherwise falls back to the global config
-    // default. applied flat, no rotation.
+    // geyser's armor stand mount offset ignores the real java seat position, fixes it here.
+    // per-item seat-offset wins over global, applied flat
     @Subscribe
     public void onPassengerMount(ServerUpdateEntityPassengersEvent.Mount event) {
         GeyserEntity vehicle = event.vehicle();

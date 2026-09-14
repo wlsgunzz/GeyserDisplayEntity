@@ -40,8 +40,7 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
         super(entitySpawnContext);
     }
 
-    // tracks currently spawned furniture entities so the seat-rotation fix can find the nearest
-    // one and borrow its yaw, since the armor stand seat itself doesn't expose its rotation
+    // tracks spawned furniture for seat-offset per-item lookup
     public static final java.util.Set<ItemDisplayEntity> ACTIVE_ENTITIES = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     @Override
@@ -55,14 +54,6 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
     public void despawnEntity() {
         ACTIVE_ENTITIES.remove(this);
         super.despawnEntity();
-    }
-
-    public float getYaw() {
-        return this.yaw;
-    }
-
-    public Vector3f getPosition() {
-        return this.position;
     }
 
     public FileConfiguration getMappingConfig() {
