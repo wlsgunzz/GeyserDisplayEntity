@@ -2,7 +2,7 @@
 
 # About
 This Geyser Extension provides Item Display support, allows players to see Nexo, CraftEngine and ItemAdder item displays
-
+Please keep in mind i am actively trying to improve this/do more precice testing
 # What's new in this fork
 - Position offset support (`x-offset` / `y-offset` / `z-offset`) per mapping, rotated automatically to match the furniture's facing direction
 - Fixed Bedrock players sitting in the wrong spot on armor-stand-based seats (Geyser's built-in seat positioning ignores the real Java-side seat position)
