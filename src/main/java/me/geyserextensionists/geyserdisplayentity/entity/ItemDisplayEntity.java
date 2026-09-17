@@ -60,6 +60,21 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
         return this.config;
     }
 
+    // which mapping file + entry within it was actually matched for this entity - lets a later
+    // /reload re-look-up the fresh version of the same mapping and re-apply it in place, instead
+    // of needing a full despawn/respawn for every entity on the server
+    private String matchedMappingFileKey;
+    private String matchedMappingEntryKey;
+
+    public void reapplyMappingConfig() {
+        if (matchedMappingFileKey == null || matchedMappingEntryKey == null) return;
+        FileConfiguration mappingsConfig = GeyserDisplayEntity.getExtension().getConfigManager().getConfigMappingsCache().get(matchedMappingFileKey);
+        if (mappingsConfig == null) return;
+        FileConfiguration freshMappingConfig = mappingsConfig.getConfigurationSection(matchedMappingEntryKey);
+        if (freshMappingConfig == null) return;
+        entityApplyDisplayConfig(freshMappingConfig);
+    }
+
     @Override
     public Vector3f bedrockPosition() {
         if (config == null) return super.bedrockPosition();
@@ -99,7 +114,8 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
         String type = session.getItemMappings().getMapping(stack.getId()).getJavaItem().javaIdentifier();
 
         boolean mappingApplied = false;
-        for (FileConfiguration mappingsConfig : GeyserDisplayEntity.getExtension().getConfigManager().getConfigMappingsCache().values()) {
+        for (var fileEntry : GeyserDisplayEntity.getExtension().getConfigManager().getConfigMappingsCache().entrySet()) {
+            FileConfiguration mappingsConfig = fileEntry.getValue();
             if (mappingsConfig == null) continue;
 
             for (Object mappingKey : mappingsConfig.getRootNode().childrenMap().keySet()) {
@@ -118,6 +134,11 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
 
                 if (applied) {
                     mappingApplied = true;
+                    // remember exactly which file + entry this was, so a later reload can
+                    // re-look-up the fresh version of this same mapping and re-apply it in
+                    // place, without needing a full despawn/respawn
+                    this.matchedMappingFileKey = fileEntry.getKey();
+                    this.matchedMappingEntryKey = mappingString;
                     if (GeyserDisplayEntity.getExtension().getConfigManager().getConfig().getBoolean("settings.debug.per-player-load-mappings")) GeyserDisplayEntity.getExtension().logger().info("Loading Mappings: " + mappingString + " - " + mappingConfig.getString("item-identifier"));
                     break;
                 }

@@ -125,18 +125,32 @@ public class GeyserDisplayEntity implements Extension {
                 .permission("geyserdisplayentity.commands.reload")
                 .executor((source, command, args) -> {
                     configManager.load();
+
+                    // re-apply the fresh config to every currently-spawned furniture entity in
+                    // place (a metadata update), instead of a full despawn/respawn - much lighter
+                    // on the network for servers with a lot of furniture placed, since this
+                    // doesn't send full add/remove entity packets for every single piece
+                    for (ItemDisplayEntity entity : ItemDisplayEntity.ACTIVE_ENTITIES) {
+                        entity.reapplyMappingConfig();
+                    }
+
                     source.sendMessage(configManager.getLang().getString("commands.geyserdisplayentity.reload.successfully-reloaded"));
                 })
                 .build());
     }
 
     // geyser's armor stand mount offset ignores the real java seat position, fixes it here.
-    // per-item seat-offset wins over global, applied flat
+    // per-item seat-offset wins over global, applied flat. only matches furniture belonging to
+    // the same player's connection, since ACTIVE_ENTITIES is shared across everyone on the proxy
     @Subscribe
     public void onPassengerMount(ServerUpdateEntityPassengersEvent.Mount event) {
         GeyserEntity vehicle = event.vehicle();
         if (vehicle.definition() == null) return;
-        if (!"minecraft:armor_stand".contentEquals(vehicle.definition().identifier().toString())) return;
+        // path()/vanilla() compare cached fields directly - avoids the string allocation
+        // toString() would do (namespace + ":" + path) on this, the highest-frequency check in
+        // the whole plugin, since it runs for every mount on the server, of any entity type
+        Identifier vehicleId = vehicle.definition().identifier();
+        if (!vehicleId.vanilla() || !"armor_stand".equals(vehicleId.path())) return;
 
         FileConfiguration generalConfig = configManager.getConfig().getConfigurationSection("general");
 
@@ -145,6 +159,7 @@ public class GeyserDisplayEntity implements Extension {
         if (vehiclePos != null) {
             float nearestDist = 1.0f; // ignore anything further than this, likely unrelated
             for (ItemDisplayEntity candidate : ItemDisplayEntity.ACTIVE_ENTITIES) {
+                if (candidate.getSession() != event.connection()) continue;
                 Vector3f candidatePos = candidate.getPosition();
                 if (candidatePos == null) continue;
                 float dist = candidatePos.distance(vehiclePos);
@@ -159,14 +174,42 @@ public class GeyserDisplayEntity implements Extension {
 
         boolean hasPerItemSeatOffset = itemConfig != null && (itemConfig.contains("seat-offset-x") || itemConfig.contains("seat-offset-y") || itemConfig.contains("seat-offset-z"));
         boolean hasGlobalSeatOffset = generalConfig != null && (generalConfig.contains("seat-offset-x") || generalConfig.contains("seat-offset-y") || generalConfig.contains("seat-offset-z"));
-        if (!hasPerItemSeatOffset && !hasGlobalSeatOffset) return;
-
-        float seatX = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-x");
-        float seatY = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-y");
-        float seatZ = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-z");
+        boolean hasPerItemSeatRotation = itemConfig != null && itemConfig.contains("seat-rotation");
+        boolean hasGlobalSeatRotation = generalConfig != null && generalConfig.contains("seat-rotation");
+        if (!hasPerItemSeatOffset && !hasGlobalSeatOffset && !hasPerItemSeatRotation && !hasGlobalSeatRotation) return;
 
         GeyserEntity passenger = event.addedPassenger();
-        passenger.override(GeyserEntityDataTypes.SEAT_OFFSET, Vector3f.from(seatX, seatY, seatZ));
+
+        if (hasPerItemSeatOffset || hasGlobalSeatOffset) {
+            float seatX = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-x");
+            float seatY = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-y");
+            float seatZ = readSeatOffsetComponent(itemConfig, generalConfig, "seat-offset-z");
+            passenger.override(GeyserEntityDataTypes.SEAT_OFFSET, Vector3f.from(seatX, seatY, seatZ));
+        }
+
+        // corrects the direction the rider faces while seated - independent of position offset,
+        // since some furniture only needs rotation fixed with no position change at all
+        if (hasPerItemSeatRotation || hasGlobalSeatRotation) {
+            float rotationDegrees = readSeatOffsetComponent(itemConfig, generalConfig, "seat-rotation");
+            passenger.override(GeyserEntityDataTypes.ROTATE_RIDER_DEGREES, rotationDegrees);
+            passenger.override(GeyserEntityDataTypes.SEAT_HAS_ROTATION, true);
+        }
+    }
+
+    // clears the override on dismount (passing null, not a zero vector - clearing genuinely
+    // resets to geyser's own default calculation, a zero vector would just be a different
+    // override that persists into the next mount)
+    @Subscribe
+    public void onPassengerDismount(ServerUpdateEntityPassengersEvent.Dismount event) {
+        GeyserEntity vehicle = event.vehicle();
+        if (vehicle.definition() == null) return;
+        Identifier vehicleId = vehicle.definition().identifier();
+        if (!vehicleId.vanilla() || !"armor_stand".equals(vehicleId.path())) return;
+
+        GeyserEntity passenger = event.removedPassenger();
+        passenger.override(GeyserEntityDataTypes.SEAT_OFFSET, null);
+        passenger.override(GeyserEntityDataTypes.ROTATE_RIDER_DEGREES, null);
+        passenger.override(GeyserEntityDataTypes.SEAT_HAS_ROTATION, null);
     }
 
     // per-item value wins if set; otherwise falls back to global config default; otherwise 0
