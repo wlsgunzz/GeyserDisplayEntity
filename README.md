@@ -45,7 +45,7 @@ Applied flat (not rotation-aware, unlike position offset). Has no effect at all 
 
 Furniture matching is proximity-based - when a player sits down, the plugin looks for the closest piece of *their own* placed furniture within 1 block to figure out which mapping's seat-offset to use. This has held up fine in testing so far, including two seats placed in the same block and multiple players sitting simultaneously, but it's worth knowing the mechanism isn't a guaranteed exact link - it's "whichever furniture is closest," not a real ID-based match (Geyser/Nexo don't expose one).
 
-### Seat rotation
+### Seat rotation (has global fallback so without setting seat-rotation you can still get free/stright rotation)
 **Where it goes:** exactly the same as seat offset - global `config.yml` default, or per-item override, per-item wins.
 ```yaml
 general:
