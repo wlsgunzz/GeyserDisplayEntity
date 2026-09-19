@@ -1,0 +1,60 @@
+package me.geyserextensionists.geyserdisplayentity.util;
+
+import me.geyserextensionists.geyserdisplayentity.GeyserDisplayEntity;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+public class FileUtils {
+
+    public static void createFiles(GeyserDisplayEntity extension, String fileName) {
+        Path config = extension.dataFolder().resolve(fileName);
+        if (Files.exists(config)) return;
+
+        try {
+            Path parentDirectory = config.getParent();
+            if (parentDirectory != null && !Files.exists(parentDirectory)) Files.createDirectories(parentDirectory);
+
+            try (InputStream resourceAsStream = extension.getClass().getClassLoader().getResourceAsStream("Extension/" + fileName)) {
+                if (resourceAsStream == null) {
+                    extension.logger().warning(fileName + " is invalid!");
+                    return;
+                }
+
+                Files.copy(resourceAsStream, config);
+            } catch (IOException err) {
+                throw new RuntimeException(err);
+            }
+        } catch (IOException err) {
+            throw new RuntimeException(err);
+        }
+    }
+
+    public static List<File> getAllFiles(File folder, String fileType) {
+        List<File> files = new ArrayList<>();
+        if (folder == null || !folder.exists()) return files;
+        File[] listedFiles = folder.listFiles();
+        if (listedFiles == null) return files;
+
+        // listFiles() gives no ordering guarantee - without sorting, which file wins when two
+        // could match the same item can differ between restarts or servers running identical files
+        Arrays.sort(listedFiles, Comparator.comparing(File::getName));
+
+        for (File file : listedFiles) {
+            if (file.isDirectory()) {
+                files.addAll(getAllFiles(file, fileType));
+            } else if (file.getName().endsWith(fileType)) {
+                files.add(file);
+            }
+        }
+
+        return files;
+    }
+}

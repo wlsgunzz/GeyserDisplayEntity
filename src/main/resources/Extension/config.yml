@@ -1,0 +1,36 @@
+# General display options
+general:
+  # The height of display entity
+  height: 1.7
+  # The y-offset of display entity
+  y-offset: -0.5
+  # Use entity scale, instead of entity properties
+  vanilla-scale: false
+  vanilla-scale-multiplier: 1
+  # Equip custom items (items with custom mapping) to hand
+  hand: false
+  # Seat offset correction for armor stand seats. Global default here, can be overridden per-item
+  # with seat-offset-x/y/z under a mapping's own displayentityoptions.
+  #seat-offset-x: 0.0
+  #seat-offset-y: 0.0
+  #seat-offset-z: 0.0
+  # Corrects the direction Bedrock players face while seated, in degrees. Independent of
+  # seat-offset - can be set without any position offset at all, or alongside one. Global default
+  # here, can be overridden per-item with seat-rotation under a mapping's own displayentityoptions.
+  #seat-rotation: 0.0
+
+# Invisible item types
+hide-types:
+  - "minecraft:leather_horse_armor"
+  - "minecraft:bone"
+
+# Always hide item types, even when translated to custom Bedrock item definitions
+hide-custom-types:
+  - "minecraft:leather_horse_armor"
+
+hide-unmapped-vanilla-displays: true
+
+settings:
+  debug:
+    per-player-load-mappings: false
+    log-displays: false
